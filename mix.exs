@@ -1,20 +1,21 @@
 defmodule OffBroadwaySequin.MixProject do
   use Mix.Project
 
-  @scm_url "https://github.com/sequinstream/off_broadway_sequin"
+  @github "https://github.com/sequinstream/off_broadway_sequin"
 
   def project do
     [
       app: :off_broadway_sequin,
       version: "0.1.0",
-      elixir: "~> 1.15",
+      elixir: "~> 1.13",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
 
       # Package
       package: package(),
-      description: description()
+      description: description(),
+      source_url: @github
     ]
   end
 
@@ -31,9 +32,9 @@ defmodule OffBroadwaySequin.MixProject do
 
   defp package do
     [
-      maintainers: ["Sequin"],
       licenses: ["MIT"],
-      links: %{GitHub: @scm_url}
+      links: %{GitHub: @github},
+      maintainers: ["Anthony Accomazzo", "Carter Pedersen"]
     ]
   end
 
@@ -41,7 +42,8 @@ defmodule OffBroadwaySequin.MixProject do
   defp deps do
     [
       {:broadway, "~> 1.0"},
-      {:req, "~> 0.5.2"}
+      {:req, "~> 0.5.2"},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end
 
