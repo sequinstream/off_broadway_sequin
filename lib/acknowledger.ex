@@ -3,28 +3,27 @@ defmodule OffBroadwaySequin.Acknowledger do
   @behaviour Broadway.Acknowledger
 
   @impl true
-  def ack({producer_pid, _}, successful, failed) do
-    {retryable, drop} =
-      Enum.split_with(failed, fn
-        %{acknowledger: {_, _ack_ref, ack_data}} -> ack_data.retry
-      end)
+  def ack(_, [], _failed) do
+    :ok
+  end
 
+  def ack({sequin_client, sequin_config}, successful, _failed) do
     ack_ids =
-      Enum.map(successful ++ drop, fn
+      Enum.map(successful, fn
         %{acknowledger: {_, _ack_ref, ack_data}} -> ack_data.id
       end)
 
-    send(producer_pid, {:ack, ack_ids, retryable})
+    sequin_client.ack(ack_ids, sequin_config)
   end
 
-  @impl true
-  def configure(_ack_ref, ack_data, options) do
-    case options do
-      [retry: value] when is_boolean(value) ->
-        {:ok, %{ack_data | retry: value}}
+  # @impl true
+  # def configure(_ack_ref, ack_data, options) do
+  #   case options do
+  #     [retry: value] when is_boolean(value) ->
+  #       {:ok, %{ack_data | retry: value}}
 
-      _ ->
-        {:error, "Invalid options, options must be keyword list with `:retry`"}
-    end
-  end
+  #     _ ->
+  #       {:error, "Invalid options, options must be keyword list with `:retry`"}
+  #   end
+  # end
 end

@@ -5,11 +5,12 @@ defmodule OffBroadwaySequin.SequinClient do
     defstruct [
       :consumer,
       :base_url,
-      :token
+      :token,
+      :wait_for
     ]
   end
 
-  defmodule Message do
+  defmodule MessageData do
     defstruct [
       :ack_id,
       :data,
@@ -22,7 +23,8 @@ defmodule OffBroadwaySequin.SequinClient do
      %Config{
        consumer: config[:consumer],
        base_url: config[:base_url] || "https://api.sequinstream.com/api",
-       token: config[:token]
+       token: config[:token],
+       wait_for: config[:wait_for] || 120_000
      }}
   end
 
@@ -31,19 +33,16 @@ defmodule OffBroadwaySequin.SequinClient do
 
     body = %{
       max_batch_size: demand,
-      # 2 minute long polling
-      wait_for: 120_000
+      wait_for: config.wait_for
     }
 
     case Req.post(base_req(config), url: url, json: body) do
       {:ok, %Req.Response{status: 200, body: body}} ->
         messages =
           Enum.map(body["data"], fn item ->
-            %Message{
+            %MessageData{
               ack_id: item["ack_id"],
-              data: item["data"]["record"],
-              # No longer used
-              subject: nil
+              data: item["data"]["record"]
             }
           end)
 
@@ -79,7 +78,8 @@ defmodule OffBroadwaySequin.SequinClient do
     Req.new(
       base_url: config.base_url,
       headers: [{"authorization", "Bearer #{config.token}"}],
-      max_retries: 3
+      max_retries: 3,
+      receive_timeout: Enum.max([round(config.wait_for * 1.1), 15_000])
     )
   end
 end

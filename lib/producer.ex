@@ -33,44 +33,20 @@ defmodule OffBroadwaySequin.Producer do
 
   @impl GenStage
   def init(opts) do
-    client = SequinClient
+    {:ok, sequin_config} = SequinClient.init(opts)
 
-    case client.init(opts) do
-      {:ok, sequin_config} ->
-        state = %{
-          demand: 0,
-          sequin_client: client,
-          sequin_config: sequin_config
-        }
+    state = %{
+      demand: 0,
+      sequin_client: SequinClient,
+      sequin_config: sequin_config
+    }
 
-        {:producer, state}
-
-      {:error, message} ->
-        raise ArgumentError, "invalid options given to #{inspect(client)}.init/1, " <> message
-    end
+    {:producer, state}
   end
 
   @impl GenStage
   def handle_demand(incoming_demand, state) do
     handle_receive_messages(%{state | demand: state.demand + incoming_demand})
-  end
-
-  @impl GenStage
-  def handle_info({:ack, ack_ids, _failed}, state) do
-    case ack_messages(ack_ids, state) do
-      :ok ->
-        {:noreply, [], state}
-
-      {:error, reason} ->
-        Logger.warning("Unable to acknowledge messages with Sequin. Reason: #{inspect(reason)}")
-        {:noreply, [], state}
-    end
-  end
-
-  @impl Producer
-  def prepare_for_draining(%{receive_timer: receive_timer} = state) do
-    receive_timer && Process.cancel_timer(receive_timer)
-    {:noreply, [], %{state | receive_timer: nil}}
   end
 
   @impl GenStage
@@ -106,17 +82,9 @@ defmodule OffBroadwaySequin.Producer do
       %Message{
         data: message,
         metadata: %{},
-        acknowledger: {Acknowledger, make_ack_ref(state), %{id: message.ack_id, retry: true}}
+        acknowledger:
+          {Acknowledger, {state.sequin_client, state.sequin_config}, %{id: message.ack_id}}
       }
     end)
-  end
-
-  defp make_ack_ref(state) do
-    {self(), state.sequin_config}
-  end
-
-  defp ack_messages(ack_ids, state) do
-    %{sequin_client: client, sequin_config: config} = state
-    client.ack(ack_ids, config)
   end
 end
