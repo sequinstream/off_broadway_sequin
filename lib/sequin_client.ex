@@ -3,7 +3,7 @@ defmodule OffBroadwaySequin.SequinClient do
 
   defmodule Config do
     defstruct [
-      :consumer,
+      :consumer_group,
       :base_url,
       :token,
       :wait_for
@@ -21,7 +21,7 @@ defmodule OffBroadwaySequin.SequinClient do
   def init(config) do
     {:ok,
      %Config{
-       consumer: config[:consumer],
+       consumer_group: config[:consumer_group] || config[:consumer],
        base_url: config[:base_url] || "https://api.sequinstream.com/api",
        token: config[:token],
        wait_for: config[:wait_for] || 120_000
@@ -29,7 +29,7 @@ defmodule OffBroadwaySequin.SequinClient do
   end
 
   def receive(demand, config) do
-    url = "/api/http_pull_consumers/#{config.consumer}/receive"
+    url = "/api/http_pull_consumers/#{config.consumer_group}/receive"
 
     body = %{
       max_batch_size: demand,
@@ -59,7 +59,7 @@ defmodule OffBroadwaySequin.SequinClient do
   def ack([], _config), do: :ok
 
   def ack(ack_ids, config) do
-    url = "/api/http_pull_consumers/#{config.consumer}/ack"
+    url = "/api/http_pull_consumers/#{config.consumer_group}/ack"
     body = %{ack_ids: ack_ids}
 
     case Req.post(base_req(config), url: url, json: body) do

@@ -6,7 +6,7 @@ defmodule OffBroadwaySequin.Producer do
 
   ## Producer Options
 
-    * `:consumer` - Required. Sequin consumer group name.
+    * `:consumer_group` - Required. Sequin consumer group name.
 
     * `:base_url` - Optional. The base URL for the Sequin API.
       Defaults to "https://api.sequinstream.com/api".
