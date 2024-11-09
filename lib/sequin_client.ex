@@ -22,7 +22,9 @@ defmodule OffBroadwaySequin.SequinClient do
     unknown_keys =
       config
       |> Keyword.keys()
-      |> Enum.reject(&(&1 in [:consumer_group, :consumer, :base_url, :token, :wait_for]))
+      |> Enum.reject(
+        &(&1 in [:consumer_group, :consumer, :base_url, :token, :wait_for, :broadway])
+      )
 
     if unknown_keys != [] do
       raise "Unknown keys supplied to SequinClient.init: #{inspect(unknown_keys)}"
