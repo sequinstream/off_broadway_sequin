@@ -19,10 +19,19 @@ defmodule OffBroadwaySequin.SequinClient do
   end
 
   def init(config) do
+    unknown_keys =
+      config
+      |> Keyword.keys()
+      |> Enum.reject(&(&1 in [:consumer_group, :consumer, :base_url, :token, :wait_for]))
+
+    if unknown_keys != [] do
+      raise "Unknown keys supplied to SequinClient.init: #{inspect(unknown_keys)}"
+    end
+
     {:ok,
      %Config{
        consumer_group: config[:consumer_group] || config[:consumer],
-       base_url: config[:base_url] || "https://api.sequinstream.com/api",
+       base_url: config[:base_url] || "https://api.sequinstream.com",
        token: config[:token],
        wait_for: config[:wait_for] || 120_000
      }}
