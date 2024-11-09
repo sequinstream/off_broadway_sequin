@@ -26,6 +26,14 @@ defmodule OffBroadwaySequin.SequinClient do
         &(&1 in [:consumer_group, :consumer, :base_url, :token, :wait_for, :broadway])
       )
 
+    if is_nil(config[:consumer_group]) and is_nil(config[:consumer]) do
+      raise ":consumer_group or :consumer is required"
+    end
+
+    if is_nil(config[:token]) do
+      raise ":token is required"
+    end
+
     if unknown_keys != [] do
       raise "Unknown keys supplied to SequinClient.init: #{inspect(unknown_keys)}"
     end
